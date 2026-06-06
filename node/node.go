@@ -1,6 +1,7 @@
 package node
 
 import (
+	"clusterpulse/protocol"
 	"math/rand"
 	"sort"
 	"time"
@@ -19,6 +20,7 @@ type Node struct {
 	probeInterval time.Duration
 	ackTimeout    time.Duration
 	rng           *rand.Rand
+	inbox         chan protocol.Message
 }
 
 func New(cfg Config) *Node {
@@ -48,6 +50,11 @@ func New(cfg Config) *Node {
 
 	sort.Strings(peers)
 
+	bufferSize := len(peers)*4+8
+	if bufferSize < 16 {
+		bufferSize = 16
+	}
+
 	return &Node{
 		id:            cfg.ID,
 		peers:         peers,
@@ -58,5 +65,14 @@ func New(cfg Config) *Node {
 				time.Now().UnixNano() + int64(len(cfg.ID))*7919,
 			),
 		),
+		inbox: make(chan protocol.Message, bufferSize),
 	}
+}
+
+func (n *Node) ID() string {
+	return n.id
+}
+
+func (n *Node) Inbox() chan protocol.Message {
+	return n.inbox
 }
