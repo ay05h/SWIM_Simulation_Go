@@ -1,6 +1,7 @@
 package node
 
 import (
+	"clusterpulse/membership"
 	"clusterpulse/protocol"
 	"math/rand"
 	"sort"
@@ -20,6 +21,7 @@ type Node struct {
 	probeInterval time.Duration
 	ackTimeout    time.Duration
 	rng           *rand.Rand
+	table  *membership.Table
 	inbox         chan protocol.Message
 }
 
@@ -66,6 +68,7 @@ func New(cfg Config) *Node {
 			),
 		),
 		inbox: make(chan protocol.Message, bufferSize),
+		table: membership.NewTable(cfg.ID, cfg.KnownNodes),
 	}
 }
 
@@ -76,3 +79,4 @@ func (n *Node) ID() string {
 func (n *Node) Inbox() chan protocol.Message {
 	return n.inbox
 }
+
